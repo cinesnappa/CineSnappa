@@ -28,6 +28,8 @@ jobs:
       # Optional: Trakt watch-history sync (trakt.tv > Settings > Your API Apps).
       TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
       TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
+      # Optional: built-in TMDB key (themoviedb.org > Settings > API > "API Key").
+      TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -69,6 +71,16 @@ jobs:
               echo "TRAKT_REDIRECT_URI=cinesnappa://auth/trakt"
             fi
           } > local.properties
+
+      - name: Insert TMDB key
+        run: |
+          if [[ -n "${TMDB_API_KEY}" ]]; then
+            key="$(printf '%s' "${TMDB_API_KEY}" | tr -d '[:space:]')"
+            sed -i "s|__CINESNAPPA_TMDB_API_KEY__|${key}|" composeApp/src/commonMain/kotlin/com/nuvio/app/features/tmdb/CineSnappaTmdbDefaults.kt
+            echo "TMDB key inserted"
+          else
+            echo "No TMDB_API_KEY secret; users can add their own key in Settings"
+          fi
 
       - name: Build APKs
         run: ./gradlew :androidApp:assembleFullRelease --stacktrace

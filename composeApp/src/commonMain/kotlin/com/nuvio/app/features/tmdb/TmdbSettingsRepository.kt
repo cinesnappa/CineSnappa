@@ -177,8 +177,11 @@ object TmdbSettingsRepository {
         val wasLoaded = hasLoaded
         val previousUseReleaseDates = useReleaseDates
         hasLoaded = true
-        apiKey = TmdbSettingsStorage.loadApiKey()?.trim().orEmpty()
-        enabled = (TmdbSettingsStorage.loadEnabled() ?: false) && apiKey.isNotBlank()
+        val storedKey = TmdbSettingsStorage.loadApiKey()?.trim().orEmpty()
+        val builtInKey = CineSnappaTmdbDefaults.apiKey
+        apiKey = storedKey.ifBlank { builtInKey }
+        // CineSnappa: TMDB is on by default when the app ships with a built-in key.
+        enabled = (TmdbSettingsStorage.loadEnabled() ?: builtInKey.isNotBlank()) && apiKey.isNotBlank()
         val storedLanguage = TmdbSettingsStorage.loadLanguage()
         language = if (storedLanguage == null) "en" else normalizeLanguage(storedLanguage)
         useTrailers = TmdbSettingsStorage.loadUseTrailers() ?: true
