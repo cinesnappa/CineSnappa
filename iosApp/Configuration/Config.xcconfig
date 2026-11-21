@@ -1,0 +1,6 @@
+#include? "Version.xcconfig"
+
+TEAM_ID=
+
+PRODUCT_NAME=CineSnappa
+PRODUCT_BUNDLE_IDENTIFIER=com.cinesnappa.app.CineSnappa$(TEAM_ID)
