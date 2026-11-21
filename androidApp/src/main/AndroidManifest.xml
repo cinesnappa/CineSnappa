@@ -60,6 +60,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="stremio" />
+                <data android:scheme="nuvio" />
             </intent-filter>
         </activity>
 

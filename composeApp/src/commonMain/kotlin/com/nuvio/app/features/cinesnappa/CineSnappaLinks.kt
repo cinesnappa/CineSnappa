@@ -33,7 +33,27 @@ object CineSnappaDebridSignup {
 
 /** Free, legal addons offered in the Addons screen. One tap installs them. */
 object CineSnappaRecommendedAddons {
-    data class Addon(val name: String, val description: String, val manifestUrl: String)
+    /**
+     * [manifestUrl] addons install with one tap. [configureUrl] addons need a
+     * personal setup page first; the page's Install button hands the finished
+     * addon back to CineSnappa through a stremio:// or nuvio:// link.
+     */
+    data class Addon(
+        val name: String,
+        val description: String,
+        val manifestUrl: String = "",
+        val configureUrl: String = "",
+        val host: String = "",
+    ) {
+        val needsSetup: Boolean get() = configureUrl.isNotBlank()
+
+        fun isInstalled(installedUrls: Set<String>): Boolean =
+            if (needsSetup) {
+                installedUrls.any { url -> host.isNotBlank() && url.contains(host, ignoreCase = true) }
+            } else {
+                manifestUrl in installedUrls
+            }
+    }
 
     val ALL: List<Addon> = listOf(
         Addon(
@@ -55,6 +75,18 @@ object CineSnappaRecommendedAddons {
             name = "OpenSubtitles",
             description = "Subtitles in dozens of languages",
             manifestUrl = "https://opensubtitles-v3.strem.io/manifest.json",
+        ),
+        Addon(
+            name = "AIOMetadata",
+            description = "Richer posters, ratings and extra catalogs (TMDB, TVDB, IMDb, anime). Set up once, then tap Install",
+            configureUrl = "https://aiometadata.elfhosted.com/configure/",
+            host = "aiometadata.elfhosted.com",
+        ),
+        Addon(
+            name = "Watchly",
+            description = "Personal rows like \"Because you watched…\" from your Trakt history. Needs a free TMDB key",
+            configureUrl = "https://watchly.elfhosted.com/",
+            host = "watchly.elfhosted.com",
         ),
     )
 }

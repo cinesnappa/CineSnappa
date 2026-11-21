@@ -60,7 +60,8 @@ fun buildDownloadsDeepLinkUrl(): String = "cinesnappa://downloads"
 internal fun parseAppDeepLink(url: String): AppDeepLink? {
     val parsedUrl = runCatching { Url(url) }.getOrNull() ?: return null
     val scheme = parsedUrl.protocol.name.lowercase()
-    if (scheme == "stremio") {
+    // CineSnappa: also catch "Install in Nuvio" buttons from addon sites.
+    if (scheme == "stremio" || scheme == "nuvio") {
         return if (looksLikeAddonHost(parsedUrl.host.lowercase())) {
             customSchemeToHttpsUrl(url, scheme)?.let(AppDeepLink::AddonInstall)
         } else {

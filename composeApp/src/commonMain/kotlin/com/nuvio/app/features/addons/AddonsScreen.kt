@@ -154,6 +154,7 @@ internal fun AddonsSettingsPageContent(
                     }
                 }
             },
+            onSetupClick = { url -> runCatching { uriHandler.openUri(url) } },
         )
 
         SectionHeader(stringResource(Res.string.addons_section_installed))
@@ -292,11 +293,12 @@ private fun OverviewStat(
 private fun RecommendedAddonsCard(
     installedUrls: Set<String>,
     onAddClick: (String) -> Unit,
+    onSetupClick: (String) -> Unit,
 ) {
     NuvioSurfaceCard {
         CineSnappaRecommendedAddons.ALL.forEachIndexed { index, addon ->
             if (index > 0) Spacer(modifier = Modifier.height(14.dp))
-            val installed = addon.manifestUrl in installedUrls
+            val installed = addon.isInstalled(installedUrls)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -312,7 +314,11 @@ private fun RecommendedAddonsCard(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = if (installed) "Installed" else "Add",
+                    text = when {
+                        installed -> "Installed"
+                        addon.needsSetup -> "Set up"
+                        else -> "Add"
+                    },
                     style = MaterialTheme.typography.labelLarge,
                     color = if (installed) MaterialTheme.colorScheme.onSurfaceVariant else Color.White,
                     modifier = Modifier
@@ -320,14 +326,16 @@ private fun RecommendedAddonsCard(
                         .background(
                             if (installed) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
                         )
-                        .clickable(enabled = !installed) { onAddClick(addon.manifestUrl) }
+                        .clickable(enabled = !installed || addon.needsSetup) {
+                            if (addon.needsSetup) onSetupClick(addon.configureUrl) else onAddClick(addon.manifestUrl)
+                        }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "You can add any other addon by pasting its link above.",
+            text = "\"Set up\" opens the addon's page: choose your options, then tap Install (or copy the link and paste it above).",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
