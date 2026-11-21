@@ -25,11 +25,14 @@ jobs:
       KEYSTORE_BASE64: ${{ secrets.CINESNAPPA_KEYSTORE_BASE64 }}
       KEYSTORE_PASSWORD: ${{ secrets.CINESNAPPA_KEYSTORE_PASSWORD }}
       KEY_ALIAS: cinesnappa
+      # Optional: Trakt watch-history sync (trakt.tv > Settings > Your API Apps).
+      TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
+      TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -60,6 +63,11 @@ jobs:
             echo "NUVIO_RELEASE_STORE_PASSWORD=${KEYSTORE_PASSWORD}"
             echo "NUVIO_RELEASE_KEY_ALIAS=${KEY_ALIAS}"
             echo "NUVIO_RELEASE_KEY_PASSWORD=${KEYSTORE_PASSWORD}"
+            if [[ -n "${TRAKT_CLIENT_ID}" ]]; then
+              echo "TRAKT_CLIENT_ID=${TRAKT_CLIENT_ID}"
+              echo "TRAKT_CLIENT_SECRET=${TRAKT_CLIENT_SECRET}"
+              echo "TRAKT_REDIRECT_URI=cinesnappa://auth/trakt"
+            fi
           } > local.properties
 
       - name: Build APKs

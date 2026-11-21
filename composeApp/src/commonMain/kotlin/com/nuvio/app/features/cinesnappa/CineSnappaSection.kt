@@ -49,8 +49,8 @@ fun CineSnappaSection(
     val videos by produceState<List<CineSnappaVideo>?>(initialValue = null) {
         value = CineSnappaFeed.latest()
     }
-    val videoList = videos ?: return
-    if (videoList.isEmpty()) return
+    // The header and Follow bar always show; the Shorts row appears once the feed loads.
+    val videoList = videos.orEmpty()
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -76,7 +76,7 @@ fun CineSnappaSection(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "Latest from ${CineSnappaBrand.CHANNEL_HANDLE}",
+                    text = "Latest from ${CineSnappaBrand.CHANNEL_HANDLE} · follow us everywhere",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -94,7 +94,12 @@ fun CineSnappaSection(
             )
         }
 
-        LazyRow(
+        CineSnappaFollowBar(
+            modifier = Modifier.padding(top = 10.dp),
+            sectionPadding = sectionPadding,
+        )
+
+        if (videoList.isNotEmpty()) LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 10.dp),
@@ -167,5 +172,42 @@ private fun CineSnappaMoreCard(onClick: () -> Unit) {
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
             color = MaterialTheme.colorScheme.onBackground,
         )
+    }
+}
+
+private data class SocialLink(val label: String, val url: String, val color: Color, val textColor: Color = Color.White)
+
+/** Row of "Follow" buttons that open the CineSnappa social profiles in their apps. */
+@Composable
+fun CineSnappaFollowBar(
+    modifier: Modifier = Modifier,
+    sectionPadding: Dp = 16.dp,
+) {
+    val uriHandler = LocalUriHandler.current
+    val links = listOf(
+        SocialLink("YouTube", CineSnappaBrand.YOUTUBE_URL, Color(0xFFFF0000)),
+        SocialLink("TikTok", CineSnappaBrand.TIKTOK_URL, Color(0xFF111111)),
+        SocialLink("Instagram", CineSnappaBrand.INSTAGRAM_URL, Color(0xFFD62976)),
+        SocialLink("Facebook", CineSnappaBrand.FACEBOOK_URL, Color(0xFF1877F2)),
+    ).filter { it.url.isNotBlank() }
+    if (links.isEmpty()) return
+
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = sectionPadding),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(links, key = { it.label }) { link ->
+            Text(
+                text = link.label,
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                color = link.textColor,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(link.color)
+                    .clickable { runCatching { uriHandler.openUri(link.url) } }
+                    .padding(horizontal = 14.dp, vertical = 7.dp),
+            )
+        }
     }
 }

@@ -16,6 +16,12 @@ object CineSnappaBrand {
     const val SUBSCRIBE_URL = "https://www.youtube.com/@CineSnappa?sub_confirmation=1"
     const val FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=$CHANNEL_ID"
     const val MAX_ITEMS = 15
+
+    // Social profiles shown in the "Follow CineSnappa" bar. Leave a URL empty to hide that button.
+    const val YOUTUBE_URL = "https://www.youtube.com/@CineSnappa"
+    const val TIKTOK_URL = "https://www.tiktok.com/@cinesnappaofficial"
+    const val INSTAGRAM_URL = "https://www.instagram.com/cinesnappa/"
+    const val FACEBOOK_URL = ""
 }
 
 data class CineSnappaVideo(

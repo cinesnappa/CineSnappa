@@ -63,7 +63,13 @@ object AddonRepository {
         currentProfileId = effectiveProfileId
         log.d { "initialize() — loading local addons for profile $currentProfileId" }
 
-        val storedUrls = dedupeManifestUrls(AddonStorage.loadInstalledAddonUrls(currentProfileId))
+        var storedUrls = dedupeManifestUrls(AddonStorage.loadInstalledAddonUrls(currentProfileId))
+        if (storedUrls.isEmpty() && CineSnappaDefaultAddons.shouldSeed(currentProfileId)) {
+            // CineSnappa: first launch gets free Movies & TV catalogs out of the box.
+            storedUrls = CineSnappaDefaultAddons.MANIFEST_URLS
+            AddonStorage.saveInstalledAddonUrls(currentProfileId, storedUrls)
+            CineSnappaDefaultAddons.markSeeded(currentProfileId)
+        }
         val enabledByUrl = loadLocalEnabledStates()
         log.d { "initialize() — local addon count: ${storedUrls.size}" }
         if (storedUrls.isEmpty()) return

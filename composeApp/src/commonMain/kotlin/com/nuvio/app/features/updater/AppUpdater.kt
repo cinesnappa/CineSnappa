@@ -23,8 +23,8 @@ import kotlinx.coroutines.runBlocking
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.getString
 
-// Checks github.com/Emekshi/CineSnappa releases for updates.
-private const val gitHubOwner = "Emekshi"
+// Checks github.com/cinesnappa/CineSnappa releases for updates.
+private const val gitHubOwner = "cinesnappa"
 private const val gitHubRepo = "CineSnappa"
 private const val gitHubApiBase = "https://api.github.com"
 private const val releaseChannelBranch = "main"

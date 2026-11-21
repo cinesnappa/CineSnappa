@@ -1,6 +1,7 @@
 package com.nuvio.app
 
 import android.content.Intent
+import com.nuvio.app.features.cinesnappa.CineSnappaCache
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -71,6 +72,7 @@ class MainActivity : AppCompatActivity() {
                 scrim = 0xFF020404.toInt(),
             ),
         )
+        CineSnappaCache.onAppStart(applicationContext)
         ThemeSettingsStorage.initialize(applicationContext)
         SentrySettingsStorage.initialize(applicationContext)
         SentryInitializer.start(application)

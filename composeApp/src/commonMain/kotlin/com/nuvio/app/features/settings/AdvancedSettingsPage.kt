@@ -58,6 +58,10 @@ import nuvio.composeapp.generated.resources.sentry_sent_title
 import nuvio.composeapp.generated.resources.sentry_turn_off
 import nuvio.composeapp.generated.resources.sentry_turn_on
 import org.jetbrains.compose.resources.stringResource
+import com.nuvio.app.features.cinesnappa.CineSnappaCache
+import com.nuvio.app.features.cinesnappa.formatCacheSize
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal fun LazyListScope.advancedSettingsContent(
     isTablet: Boolean,
@@ -141,6 +145,20 @@ internal fun LazyListScope.advancedSettingsContent(
                                     ProfileRepository.activeProfileId,
                                 )
                             }
+                        }
+                    },
+                )
+                // CineSnappa: wipe temporary files (images, subtitles, buffers, old update APKs).
+                var appCacheLabel by remember { mutableStateOf<String?>(null) }
+                SettingsNavigationRow(
+                    title = "Clear app cache",
+                    description = appCacheLabel
+                        ?: "Frees space by removing temporary files. Your addons, logins and watch history are kept. Also clears automatically after updates and when it passes 500 MB.",
+                    isTablet = isTablet,
+                    onClick = {
+                        scope.launch {
+                            val freed = withContext(Dispatchers.Default) { CineSnappaCache.clearNow() }
+                            appCacheLabel = "Cleared ${formatCacheSize(freed)}"
                         }
                     },
                 )
