@@ -49,7 +49,9 @@ object DebridProviders {
         id = PREMIUMIZE_ID,
         displayName = "Premiumize",
         shortName = "PM",
-        authMethod = DebridProviderAuthMethod.DeviceCode,
+        // CineSnappa: API key from premiumize.me/account (device sign-in needs a
+        // registered Premiumize client ID, which this build doesn't have).
+        authMethod = DebridProviderAuthMethod.ApiKey,
         capabilities = setOf(
             DebridProviderCapability.ClientResolve,
             DebridProviderCapability.LocalTorrentCacheCheck,

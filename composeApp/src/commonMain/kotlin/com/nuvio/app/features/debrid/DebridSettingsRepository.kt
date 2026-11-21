@@ -83,8 +83,13 @@ object DebridSettingsRepository {
         }
         normalizePreferredResolverProviderId(save = true)
         disableIfNoResolver()
+        // CineSnappa: connecting a debrid account switches link resolving on,
+        // so users don't have to find a second toggle.
+        val autoEnable = normalized.isNotBlank() && !enabled && hasResolverProvider()
+        if (autoEnable) enabled = true
         publish()
         DebridSettingsStorage.saveProviderApiKey(provider.id, normalized)
+        if (autoEnable) DebridSettingsStorage.saveEnabled(true)
     }
 
     fun setTorboxApiKey(value: String) {

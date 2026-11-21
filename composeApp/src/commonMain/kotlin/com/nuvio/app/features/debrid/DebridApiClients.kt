@@ -521,7 +521,7 @@ internal object PremiumizeApiClient {
         )
         val response = httpRequestRaw(
             method = method,
-            url = url,
+            url = withApiKey(url, apiKey),
             headers = headers,
             body = body,
         )
@@ -537,8 +537,16 @@ internal object PremiumizeApiClient {
             "${encodeFormValue(key)}=${encodeFormValue(value)}"
         }
 
-    private fun authHeaders(apiKey: String): Map<String, String> =
-        mapOf("Authorization" to "Bearer $apiKey")
+    // CineSnappa: Premiumize account API keys go in the `apikey` query parameter.
+    private fun authHeaders(@Suppress("UNUSED_PARAMETER") apiKey: String): Map<String, String> =
+        emptyMap()
+
+    private fun withApiKey(url: String, apiKey: String): String {
+        val key = apiKey.trim()
+        if (key.isBlank()) return url
+        val separator = if ('?' in url) "&" else "?"
+        return "$url${separator}${queryString("apikey" to key)}"
+    }
 
     private val PremiumizeAccountInfoDto.isSuccess: Boolean
         get() = status.equals("success", ignoreCase = true)
