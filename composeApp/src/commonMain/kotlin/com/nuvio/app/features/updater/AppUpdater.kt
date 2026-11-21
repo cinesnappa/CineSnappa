@@ -116,6 +116,17 @@ private object VersionUtils {
         return parts.takeIf { it.isNotEmpty() }
     }
 
+    fun compareVersions(a: String?, b: String?): Int {
+        val pa = parseVersionParts(a).orEmpty()
+        val pb = parseVersionParts(b).orEmpty()
+        for (i in 0 until maxOf(pa.size, pb.size)) {
+            val x = pa.getOrElse(i) { 0 }
+            val y = pb.getOrElse(i) { 0 }
+            if (x != y) return x.compareTo(y)
+        }
+        return 0
+    }
+
     fun isRemoteNewer(remote: String?, local: String?): Boolean {
         val remoteParts = parseVersionParts(remote)
         val localParts = parseVersionParts(local)
@@ -140,7 +151,7 @@ private object AppUpdaterRepository {
     suspend fun getLatestChannelUpdate(): Result<AppUpdate> = runCatching {
         val response = httpRequestRaw(
             method = "GET",
-            url = "$gitHubApiBase/repos/$gitHubOwner/$gitHubRepo/releases?per_page=20",
+            url = "$gitHubApiBase/repos/$gitHubOwner/$gitHubRepo/releases?per_page=100",
             headers = mapOf(
                 "Accept" to "application/vnd.github+json",
                 "User-Agent" to "NuvioMobile",
@@ -152,7 +163,11 @@ private object AppUpdaterRepository {
         }
 
         val releases = appUpdaterJson.decodeFromString<List<GitHubReleaseDto>>(response.body)
-        val release = releases.firstOrNull { it.matchesRequestedChannel() && !it.draft && !it.prerelease }
+        // CineSnappa: GitHub's list order isn't by version (v0.3.1.9 sorts above v0.3.1.18),
+        // so pick the release with the highest version number.
+        val release = releases
+            .filter { it.matchesRequestedChannel() && !it.draft && !it.prerelease }
+            .maxWithOrNull { a, b -> VersionUtils.compareVersions(a.tagName ?: a.name, b.tagName ?: b.name) }
             ?: throw NoChannelReleaseException()
 
         val tag = release.tagName?.takeIf { it.isNotBlank() }
