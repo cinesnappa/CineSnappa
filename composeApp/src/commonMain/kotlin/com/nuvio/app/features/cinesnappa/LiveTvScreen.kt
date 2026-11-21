@@ -359,3 +359,20 @@ fun LiveTvEntryCard(
         Text("›", style = MaterialTheme.typography.headlineSmall, color = Color.White)
     }
 }
+
+/** Material "live_tv" glyph, used for the Live TV tab in the menu bar. */
+val LiveTvIcon: androidx.compose.ui.graphics.vector.ImageVector by lazy {
+    androidx.compose.ui.graphics.vector.ImageVector.Builder(
+        name = "LiveTv",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f,
+    ).addPath(
+        pathData = androidx.compose.ui.graphics.vector.addPathNodes(
+            "M21,6h-7.59l3.29,-3.29L16,2l-4,4 -4,-4 -0.71,0.71L10.59,6H3c-1.1,0 -2,0.89 -2,2v12c0,1.1 0.9,2 2,2h18" +
+                "c1.1,0 2,-0.9 2,-2V8c0,-1.11 -0.9,-2 -2,-2zM21,20H3V8h18v12zM9,10v8l7,-4z",
+        ),
+        fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+    ).build()
+}

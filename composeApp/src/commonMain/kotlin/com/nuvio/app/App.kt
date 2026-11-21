@@ -170,6 +170,7 @@ import com.nuvio.app.features.p2p.P2pConsentDialog
 import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.player.PlayerLaunch
 import com.nuvio.app.features.cinesnappa.LiveTvScreen
+import com.nuvio.app.features.cinesnappa.LiveTvIcon
 import com.nuvio.app.features.player.PlayerLaunchStore
 import com.nuvio.app.features.player.PlayerScreen
 import com.nuvio.app.features.player.PlayerPlaybackSnapshot
@@ -1899,6 +1900,12 @@ private fun MainAppContent(
                                             contentDescription = stringResource(Res.string.compose_nav_library),
                                         )
                                         NavItem(
+                                            selected = false,
+                                            onClick = { navController.navigate(LiveTvRoute) },
+                                            icon = LiveTvIcon,
+                                            contentDescription = "Live TV",
+                                        )
+                                        NavItem(
                                             selected = selectedTab == AppScreenTab.Settings,
                                             onClick = { handleRootTabClick(AppScreenTab.Settings) },
                                         ) {
@@ -2118,6 +2125,13 @@ private fun MainAppContent(
                                             icon = Res.drawable.sidebar_library,
                                             contentDescription = stringResource(Res.string.compose_nav_library),
                                             label = stringResource(Res.string.compose_nav_library),
+                                        )
+                                        NavItem(
+                                            selected = false,
+                                            onClick = { navController.navigate(LiveTvRoute) },
+                                            icon = LiveTvIcon,
+                                            contentDescription = "Live TV",
+                                            label = "Live TV",
                                         )
                                         NavItem(
                                             selected = selectedTab == AppScreenTab.Settings,
