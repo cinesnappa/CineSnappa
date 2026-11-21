@@ -104,6 +104,7 @@ import com.nuvio.app.features.home.components.rememberContinueWatchingLayout
 import kotlinx.coroutines.CancellationException
 import nuvio.composeapp.generated.resources.*
 import com.nuvio.app.features.cinesnappa.CineSnappaSection
+import com.nuvio.app.features.cinesnappa.LiveTvEntryCard
 import com.nuvio.app.features.cinesnappa.CineSnappaTop10Row
 import com.nuvio.app.features.cinesnappa.pickTop10
 import org.jetbrains.compose.resources.stringResource
@@ -116,6 +117,7 @@ fun HomeScreen(
     onCatalogClick: ((HomeCatalogSection) -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onHeroPlayClick: ((MetaPreview) -> Unit)? = null,
+    onLiveTvClick: (() -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
     onContinueWatchingClick: ((ContinueWatchingItem) -> Unit)? = null,
     onContinueWatchingLongPress: ((ContinueWatchingItem) -> Unit)? = null,
@@ -940,6 +942,15 @@ fun HomeScreen(
                         onItemClick = onContinueWatchingClick,
                         onItemLongPress = onContinueWatchingLongPress,
                     )
+                    if (onLiveTvClick != null) {
+                        item(key = HOME_LIVE_TV_KEY) {
+                            LiveTvEntryCard(
+                                onClick = onLiveTvClick,
+                                modifier = Modifier.padding(bottom = 16.dp),
+                                sectionPadding = homeSectionPadding,
+                            )
+                        }
+                    }
                     item(key = HOME_CINESNAPPA_SECTION_KEY) {
                         CineSnappaSection(
                             modifier = Modifier.padding(bottom = 16.dp),
@@ -1018,6 +1029,15 @@ fun HomeScreen(
                             sectionPadding = homeSectionPadding,
                             onItemClick = onPosterClick,
                         )
+                    }
+                    if (onLiveTvClick != null) {
+                        item(key = HOME_LIVE_TV_KEY) {
+                            LiveTvEntryCard(
+                                onClick = onLiveTvClick,
+                                modifier = Modifier.padding(bottom = 16.dp),
+                                sectionPadding = homeSectionPadding,
+                            )
+                        }
                     }
                     item(key = HOME_CINESNAPPA_SECTION_KEY) {
                         CineSnappaSection(
@@ -1124,6 +1144,7 @@ private const val HOME_CONTINUE_WATCHING_SECTION_KEY = "home_continue_watching"
 private const val HOME_UPCOMING_SECTION_KEY = "home_upcoming"
 private const val HOME_CINESNAPPA_SECTION_KEY = "home_cinesnappa"
 private const val HOME_TOP10_SECTION_KEY = "home_top10"
+private const val HOME_LIVE_TV_KEY = "home_live_tv"
 internal const val HomeContinueWatchingMaxRecentProgressItems = 300
 internal const val HomeNextUpInitialResolutionLimit = 32
 private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L

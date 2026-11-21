@@ -147,3 +147,10 @@ data class PlayerRoute(
     override val hidesNavigationBar: Boolean
         get() = true
 }
+
+// CineSnappa: Live TV (M3U playlists).
+@Serializable
+data object LiveTvRoute : AppRoute {
+    override val title: String
+        get() = "Live TV"
+}

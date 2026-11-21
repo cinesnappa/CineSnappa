@@ -169,6 +169,7 @@ import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepositor
 import com.nuvio.app.features.p2p.P2pConsentDialog
 import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.player.PlayerLaunch
+import com.nuvio.app.features.cinesnappa.LiveTvScreen
 import com.nuvio.app.features.player.PlayerLaunchStore
 import com.nuvio.app.features.player.PlayerScreen
 import com.nuvio.app.features.player.PlayerPlaybackSnapshot
@@ -285,6 +286,7 @@ private val navigationSavedStateConfiguration = SavedStateConfiguration {
             subclass(StreamRoute::class, StreamRoute.serializer())
             subclass(CatalogRoute::class, CatalogRoute.serializer())
             subclass(PlayerRoute::class, PlayerRoute.serializer())
+            subclass(LiveTvRoute::class, LiveTvRoute.serializer())
         }
     }
 }
@@ -1937,6 +1939,7 @@ private fun MainAppContent(
                                         onPosterLongClick = { meta ->
                                             openPosterActions(PosterActionTarget(preview = meta))
                                         },
+                                        onLiveTvClick = { navController.navigate(LiveTvRoute) },
                                         onHeroPlayClick = { meta ->
                                             onPlay(
                                                 meta.type,
@@ -3150,6 +3153,34 @@ private fun MainAppContent(
                         onBackFromShow = onBack,
                     )
                 }
+                entry<LiveTvRoute> { route ->
+                    val onBack = rememberGuardedPopBackStack(
+                        navController = navController,
+                        route = route,
+                    )
+                    LiveTvScreen(
+                        onBack = onBack,
+                        onPlayChannel = { channel ->
+                            val launchId = PlayerLaunchStore.put(
+                                PlayerLaunch(
+                                    profileId = activePlaybackProfileId,
+                                    title = channel.name,
+                                    sourceUrl = channel.url,
+                                    sourceHeaders = channel.headers,
+                                    logo = channel.logo,
+                                    streamTitle = channel.name,
+                                    streamSubtitle = channel.group,
+                                    providerName = "Live TV",
+                                    contentType = "tv",
+                                    videoId = "m3u:${channel.url}",
+                                    parentMetaId = "m3u:${channel.url}",
+                                    parentMetaType = "tv",
+                                ),
+                            )
+                            navController.navigate(PlayerRoute(launchId = launchId, title = channel.name))
+                        },
+                    )
+                }
                 entry<AddonsSettingsRoute> { route ->
                     val onBack = rememberGuardedPopBackStack(
                         navController = navController,
@@ -3662,6 +3693,7 @@ private fun AppTabHost(
     onCheckForUpdatesClick: (() -> Unit)? = null,
     onTestUpdateBannerClick: (() -> Unit)? = null,
     onCollectionsSettingsClick: () -> Unit = {},
+    onLiveTvClick: (() -> Unit)? = null,
     onHeroPlayClick: ((MetaPreview) -> Unit)? = null,
     onFolderClick: ((collectionId: String, folderId: String) -> Unit)? = null,
     requestedSettingsPageName: String? = null,
@@ -3681,6 +3713,7 @@ private fun AppTabHost(
                         onCatalogClick = onCatalogClick,
                         onPosterClick = onPosterClick,
                         onHeroPlayClick = onHeroPlayClick,
+                        onLiveTvClick = onLiveTvClick,
                         onPosterLongClick = onPosterLongClick,
                         onContinueWatchingClick = onContinueWatchingClick,
                         onContinueWatchingLongPress = onContinueWatchingLongPress,
