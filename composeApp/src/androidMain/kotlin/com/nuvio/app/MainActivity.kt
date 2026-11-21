@@ -65,6 +65,12 @@ import com.nuvio.app.features.watchprogress.WatchProgressStorage
 class MainActivity : AppCompatActivity() {
     private var pipRemoteActionReceiver: PipRemoteActionReceiver? = null
 
+    override fun onResume() {
+        super.onResume()
+        // CineSnappa: re-check for app updates whenever the app is reopened.
+        com.nuvio.app.features.updater.AppForegroundSignal.onForeground()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge(

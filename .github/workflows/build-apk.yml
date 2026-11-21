@@ -30,6 +30,9 @@ jobs:
       TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
       # Optional: built-in TMDB key (themoviedb.org > Settings > API > "API Key").
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+      # Optional: accounts & sync (Supabase project URL + anon public key).
+      SUPABASE_URL: ${{ secrets.NUVIO_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.NUVIO_SUPABASE_ANON_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +73,10 @@ jobs:
               echo "TRAKT_CLIENT_SECRET=${TRAKT_CLIENT_SECRET}"
               echo "TRAKT_REDIRECT_URI=cinesnappa://auth/trakt"
             fi
+            if [[ -n "${SUPABASE_URL}" && -n "${SUPABASE_ANON_KEY}" ]]; then
+              echo "NUVIO_SUPABASE_URL=${SUPABASE_URL}"
+              echo "NUVIO_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
+            fi
           } > local.properties
 
       - name: Insert TMDB key
@@ -104,6 +111,7 @@ jobs:
         run: |
           tag="v${{ steps.version.outputs.version }}"
           cat > notes.md <<'EOF'
+          <!-- force-update -->
           **Which file do I download?**
           - Most phones (2017 and newer): **arm64-v8a**
           - Older or cheap phones / some TV boxes: **armeabi-v7a**

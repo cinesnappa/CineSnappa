@@ -92,6 +92,7 @@ fun AppUpdaterHost(
 
     LaunchedEffect(controller) {
         controller.ensureAutoCheckStarted()
+        AppForegroundSignal.events.collect { controller.onAppForeground() }
     }
     LaunchedEffect(state.update?.tag) {
         showReleaseNotes = false
@@ -261,7 +262,7 @@ private fun AppUpdateBanner(
 
             IconButton(
                 onClick = onShowReleaseNotes,
-                enabled = update.notes.isNotBlank(),
+                enabled = update.displayNotes.isNotBlank(),
                 modifier = Modifier.size(40.dp),
             ) {
                 Icon(
@@ -290,7 +291,7 @@ private fun AppUpdateBanner(
                 }
             }
 
-            if (!state.isDownloading) {
+            if (!state.isDownloading && !update.mandatory) {
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier.size(40.dp),
@@ -361,7 +362,7 @@ private fun ReleaseNotesDialog(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                 Text(
-                    text = update.notes.ifBlank { stringResource(Res.string.updates_no_release_notes) },
+                    text = update.displayNotes.ifBlank { stringResource(Res.string.updates_no_release_notes) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 420.dp)

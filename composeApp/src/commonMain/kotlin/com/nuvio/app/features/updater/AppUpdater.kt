@@ -37,7 +37,25 @@ data class AppUpdate(
     val assetName: String,
     val assetUrl: String,
     val assetSizeBytes: Long?,
-)
+){
+    /** CineSnappa: releases whose notes contain the force-update marker can't be dismissed or skipped. */
+    val mandatory: Boolean
+        get() = notes.contains(FORCE_UPDATE_MARKER)
+
+    val displayNotes: String
+        get() = notes.replace(FORCE_UPDATE_MARKER, "").trim()
+}
+
+const val FORCE_UPDATE_MARKER = "<!-- force-update -->"
+
+/** CineSnappa: the app reports each return to the foreground so updates are re-checked. */
+object AppForegroundSignal {
+    val events = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    fun onForeground() {
+        events.tryEmit(Unit)
+    }
+}
 
 data class AppUpdaterUiState(
     val isChecking: Boolean = false,
@@ -196,12 +214,24 @@ class AppUpdaterController internal constructor(
     val uiState: StateFlow<AppUpdaterUiState> = _uiState.asStateFlow()
 
     private var autoCheckStarted = false
+    private var lastForegroundCheck: kotlin.time.TimeMark? = null
+
+    /** Re-check when the app comes back to the foreground, at most every 10 minutes. */
+    fun onAppForeground() {
+        if (!autoCheckStarted) return
+        val last = lastForegroundCheck
+        if (last != null && last.elapsedNow() < kotlin.time.Duration.parse("10m")) return
+        lastForegroundCheck = kotlin.time.TimeSource.Monotonic.markNow()
+        if (_uiState.value.isDownloading) return
+        checkForUpdates(force = false, showNoUpdateFeedback = false)
+    }
 
     fun ensureAutoCheckStarted() {
         if (autoCheckStarted || !AppFeaturePolicy.inAppUpdaterEnabled || !AppUpdaterPlatform.isSupported) {
             return
         }
         autoCheckStarted = true
+        lastForegroundCheck = kotlin.time.TimeSource.Monotonic.markNow()
         checkForUpdates(force = false, showNoUpdateFeedback = false)
     }
 
@@ -230,7 +260,7 @@ class AppUpdaterController internal constructor(
 
             result.onSuccess { update ->
                 val remoteNewer = VersionUtils.isRemoteNewer(update.tag, AppVersionConfig.VERSION_NAME)
-                val ignored = ignoredTag != null && ignoredTag == update.tag
+                val ignored = !update.mandatory && ignoredTag != null && ignoredTag == update.tag
                 val shouldShowDialog = force || (remoteNewer && !ignored)
 
                 _uiState.update { state ->
