@@ -79,6 +79,20 @@ jobs:
             fi
           } > local.properties
 
+      - name: Check optional keys
+        run: |
+          if [[ -z "${SUPABASE_URL}" ]]; then echo "Supabase: not set (accounts off)";
+          elif [[ "${SUPABASE_URL}" =~ ^https://[a-z0-9]+\.supabase\.co/?$ ]]; then echo "Supabase URL: format OK";
+          else echo "::warning::NUVIO_SUPABASE_URL should look like https://abcd1234.supabase.co (no extra path)"; fi
+          case "${SUPABASE_ANON_KEY}" in
+            "") echo "Supabase key: not set" ;;
+            eyJ*) echo "Supabase key: legacy anon key (JWT)" ;;
+            sb_publishable_*) echo "Supabase key: publishable key" ;;
+            sb_secret_*) echo "::error::NUVIO_SUPABASE_ANON_KEY is the SECRET key - use the anon/publishable key" ;;
+            *) echo "::warning::NUVIO_SUPABASE_ANON_KEY format not recognised (length ${#SUPABASE_ANON_KEY})" ;;
+          esac
+          if [[ -n "${TRAKT_CLIENT_ID}" ]]; then echo "Trakt client id: set (length ${#TRAKT_CLIENT_ID})"; else echo "Trakt: not set"; fi
+
       - name: Insert TMDB key
         run: |
           if [[ -n "${TMDB_API_KEY}" ]]; then

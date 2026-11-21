@@ -72,6 +72,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // CineSnappa: crash capture. If the last run crashed, show the details first
+        // (with a Copy button) instead of starting normally, then restart cleanly.
+        com.nuvio.app.features.cinesnappa.CrashReporter.install(applicationContext)
+        val pendingCrash = com.nuvio.app.features.cinesnappa.CrashReporter.pendingReport(applicationContext)
+        if (pendingCrash != null) {
+            setTheme(R.style.Theme_Nuvio)
+            super.onCreate(savedInstanceState)
+            com.nuvio.app.features.cinesnappa.CrashReporter.showReport(this, pendingCrash) { recreate() }
+            return
+        }
         installSplashScreen()
         enableEdgeToEdge(
             navigationBarStyle = SystemBarStyle.dark(
