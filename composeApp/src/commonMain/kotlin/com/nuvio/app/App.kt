@@ -1937,6 +1937,24 @@ private fun MainAppContent(
                                         onPosterLongClick = { meta ->
                                             openPosterActions(PosterActionTarget(preview = meta))
                                         },
+                                        onHeroPlayClick = { meta ->
+                                            onPlay(
+                                                meta.type,
+                                                meta.id,
+                                                meta.id,
+                                                meta.type,
+                                                meta.name,
+                                                meta.logo,
+                                                meta.poster,
+                                                meta.banner,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                meta.description,
+                                                null,
+                                            )
+                                        },
                                         onLibraryPosterClick = { item ->
                                             navController.navigate(DetailRoute(type = item.type, id = item.id, title = item.name))
                                         },
@@ -3644,6 +3662,7 @@ private fun AppTabHost(
     onCheckForUpdatesClick: (() -> Unit)? = null,
     onTestUpdateBannerClick: (() -> Unit)? = null,
     onCollectionsSettingsClick: () -> Unit = {},
+    onHeroPlayClick: ((MetaPreview) -> Unit)? = null,
     onFolderClick: ((collectionId: String, folderId: String) -> Unit)? = null,
     requestedSettingsPageName: String? = null,
     onRequestedSettingsPageConsumed: () -> Unit = {},
@@ -3661,6 +3680,7 @@ private fun AppTabHost(
                         scrollToTopRequests = homeScrollToTopRequests,
                         onCatalogClick = onCatalogClick,
                         onPosterClick = onPosterClick,
+                        onHeroPlayClick = onHeroPlayClick,
                         onPosterLongClick = onPosterLongClick,
                         onContinueWatchingClick = onContinueWatchingClick,
                         onContinueWatchingLongPress = onContinueWatchingLongPress,

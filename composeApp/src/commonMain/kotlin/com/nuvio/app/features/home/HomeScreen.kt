@@ -113,6 +113,7 @@ fun HomeScreen(
     scrollToTopRequests: Flow<Unit> = emptyFlow(),
     onCatalogClick: ((HomeCatalogSection) -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
+    onHeroPlayClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
     onContinueWatchingClick: ((ContinueWatchingItem) -> Unit)? = null,
     onContinueWatchingLongPress: ((ContinueWatchingItem) -> Unit)? = null,
@@ -911,6 +912,7 @@ fun HomeScreen(
                             listState = homeListState,
                             stretchPx = { heroStretchState.stretchPx },
                             onItemClick = onPosterClick,
+                            onPlayClick = onHeroPlayClick,
                         )
 
                         else -> HomeHeroReservedSpace(

@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -53,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.Icon
@@ -91,6 +95,8 @@ private const val HERO_SWIPE_THRESHOLD_FRACTION = 0.16f
 private const val HERO_SWIPE_VELOCITY_THRESHOLD = 300f
 private const val HERO_AUTO_SCROLL_INTERVAL_MS = 8_000L
 private const val HOME_TRAILER_START_DELAY_MS = 1_200L
+private val HERO_CARD_HORIZONTAL_MARGIN = 10.dp
+private val HERO_CARD_CORNER_RADIUS = 24.dp
 private const val HOME_TRAILER_RESOLVE_TIMEOUT_MS = 10_000L
 private const val HOME_TRAILER_AFTER_END_DELAY_MS = 1_500L
 private const val MOBILE_HERO_VIEWPORT_RATIO = 0.82f
@@ -117,6 +123,7 @@ fun HomeHeroSection(
     listState: LazyListState? = null,
     stretchPx: () -> Float = { 0f },
     onItemClick: ((MetaPreview) -> Unit)? = null,
+    onPlayClick: ((MetaPreview) -> Unit)? = null,
 ) {
     if (items.isEmpty()) return
 
@@ -189,7 +196,10 @@ fun HomeHeroSection(
                 itemCount = items.size,
                 coroutineScope = coroutineScope,
             )
-            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)),
+            // CineSnappa: floating rounded banner card (TryBox-style).
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(horizontal = HERO_CARD_HORIZONTAL_MARGIN, vertical = 8.dp)
+            .clip(RoundedCornerShape(HERO_CARD_CORNER_RADIUS)),
     ) {
         val layout = homeHeroLayout(
             maxWidthDp = maxWidth.value,
@@ -376,24 +386,52 @@ fun HomeHeroSection(
                         }
                     }
 
-                    if (!layout.isTablet) {
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Surface(
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // Play: movies go straight to the sources list; shows open their page to pick an episode.
+                        Row(
                             modifier = Modifier
-                                .clickable(enabled = onItemClick != null) {
-                                    onItemClick?.invoke(currentItem)
-                                },
-                            color = MaterialTheme.colorScheme.onBackground,
-                            contentColor = MaterialTheme.colorScheme.background,
-                            shape = RoundedCornerShape(40.dp),
+                                .clip(RoundedCornerShape(40.dp))
+                                .background(Color.White)
+                                .clickable(enabled = onPlayClick != null || onItemClick != null) {
+                                    val play = onPlayClick
+                                    if (play != null && currentItem.type == "movie") {
+                                        play(currentItem)
+                                    } else {
+                                        onItemClick?.invoke(currentItem)
+                                    }
+                                }
+                                .padding(start = 20.dp, end = 24.dp, top = 11.dp, bottom = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
+                            Icon(
+                                imageVector = Icons.Rounded.PlayArrow,
+                                contentDescription = null,
+                                tint = Color.Black,
+                                modifier = Modifier.size(22.dp),
+                            )
                             Text(
-                                text = stringResource(Res.string.home_view_details),
-                                modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp),
+                                text = "Play",
+                                color = Color.Black,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                             )
                         }
+                        Text(
+                            text = "More Info",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(40.dp))
+                                .background(Color.White.copy(alpha = 0.22f))
+                                .clickable(enabled = onItemClick != null) { onItemClick?.invoke(currentItem) }
+                                .padding(horizontal = 22.dp, vertical = 11.dp),
+                        )
                     }
 
                     if (items.size > 1) {
@@ -475,7 +513,9 @@ fun HomeHeroReservedSpace(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)),
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(horizontal = HERO_CARD_HORIZONTAL_MARGIN, vertical = 8.dp)
+            .clip(RoundedCornerShape(HERO_CARD_CORNER_RADIUS)),
     ) {
         val layout = homeHeroLayout(
             maxWidthDp = maxWidth.value,
