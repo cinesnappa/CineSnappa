@@ -1,6 +1,8 @@
 package com.nuvio.app.features.addons
 
 import androidx.compose.foundation.background
+import com.nuvio.app.features.cinesnappa.CineSnappaRecommendedAddons
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -139,6 +141,21 @@ internal fun AddonsSettingsPageContent(
             },
         )
 
+        // CineSnappa: free, legal addons that install with one tap.
+        SectionHeader("Recommended free addons")
+        RecommendedAddonsCard(
+            installedUrls = uiState.addons.map { it.manifestUrl }.toSet(),
+            onAddClick = { url ->
+                installModalState = AddonInstallModalState.Checking
+                coroutineScope.launch {
+                    installModalState = when (val result = AddonRepository.addAddon(url)) {
+                        is AddAddonResult.Success -> AddonInstallModalState.Success(result.manifest.name)
+                        is AddAddonResult.Error -> AddonInstallModalState.Error(result.message)
+                    }
+                }
+            },
+        )
+
         SectionHeader(stringResource(Res.string.addons_section_installed))
         if (uiState.addons.isEmpty()) {
             EmptyStateCard(usePersonalMediaCopy = usePersonalMediaCopy)
@@ -266,6 +283,52 @@ private fun OverviewStat(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun RecommendedAddonsCard(
+    installedUrls: Set<String>,
+    onAddClick: (String) -> Unit,
+) {
+    NuvioSurfaceCard {
+        CineSnappaRecommendedAddons.ALL.forEachIndexed { index, addon ->
+            if (index > 0) Spacer(modifier = Modifier.height(14.dp))
+            val installed = addon.manifestUrl in installedUrls
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = addon.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = addon.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = if (installed) "Installed" else "Add",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (installed) MaterialTheme.colorScheme.onSurfaceVariant else Color.White,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(
+                            if (installed) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
+                        )
+                        .clickable(enabled = !installed) { onAddClick(addon.manifestUrl) }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "You can add any other addon by pasting its link above.",
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

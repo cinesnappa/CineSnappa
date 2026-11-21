@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import com.nuvio.app.features.cinesnappa.CineSnappaDebridSignup
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -352,6 +353,45 @@ internal fun LazyListScope.debridSettingsContent(
                     onDismiss = { activeApiKeyProviderId = null },
                 )
             }
+    }
+
+    // CineSnappa: "Don't have an account?" sign-up links (referral where available).
+    item {
+        val uriHandler = LocalUriHandler.current
+        val unconnected = remember(settings) {
+            DebridProviders.visible().filter { settings.apiKeyFor(it.id).isBlank() }
+        }
+        if (unconnected.isNotEmpty()) {
+            SettingsSection(
+                title = "Don't have an account?",
+                isTablet = isTablet,
+            ) {
+                SettingsGroup(isTablet = isTablet) {
+                    unconnected.forEachIndexed { index, provider ->
+                        val link = CineSnappaDebridSignup.linkFor(provider.id) ?: return@forEachIndexed
+                        if (index > 0) {
+                            SettingsGroupDivider(isTablet = isTablet)
+                        }
+                        SettingsNavigationRow(
+                            title = "Sign up for ${provider.displayName}",
+                            description = if (link.isReferral) {
+                                "Create an account using our link, then come back and connect it above."
+                            } else {
+                                "Create an account, then come back and connect it above."
+                            },
+                            isTablet = isTablet,
+                            onClick = { runCatching { uriHandler.openUri(link.url) } },
+                        )
+                    }
+                }
+                Text(
+                    text = CineSnappaDebridSignup.DISCLOSURE,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+        }
     }
 
     if (!settings.canResolvePlayableLinks) {
