@@ -19,9 +19,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import nuvio.composeapp.generated.resources.Res
-import nuvio.composeapp.generated.resources.jetbrains_sans_bold
-import nuvio.composeapp.generated.resources.jetbrains_sans_regular
-import nuvio.composeapp.generated.resources.jetbrains_sans_semibold
+import nuvio.composeapp.generated.resources.hanken_grotesk_bold
+import nuvio.composeapp.generated.resources.hanken_grotesk_regular
+import nuvio.composeapp.generated.resources.hanken_grotesk_semibold
 import org.jetbrains.compose.resources.Font
 
 val LocalAppTheme = staticCompositionLocalOf { AppTheme.WHITE }
@@ -55,9 +55,9 @@ private fun buildColorScheme(palette: ThemeColorPalette, amoled: Boolean = false
 private val JetBrainsSans: FontFamily
     @Composable
     get() = FontFamily(
-        Font(Res.font.jetbrains_sans_bold, FontWeight.Bold, FontStyle.Normal),
-        Font(Res.font.jetbrains_sans_semibold, FontWeight.SemiBold, FontStyle.Normal),
-        Font(Res.font.jetbrains_sans_regular, FontWeight.Normal, FontStyle.Normal),
+        Font(Res.font.hanken_grotesk_bold, FontWeight.Bold, FontStyle.Normal),
+        Font(Res.font.hanken_grotesk_semibold, FontWeight.SemiBold, FontStyle.Normal),
+        Font(Res.font.hanken_grotesk_regular, FontWeight.Normal, FontStyle.Normal),
     )
 
 private val NuvioTypography: Typography

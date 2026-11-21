@@ -44,7 +44,7 @@ data class MetaScreenSettingsUiState(
     val items: List<MetaScreenSectionItem> = emptyList(),
     val backgroundMode: MetaScreenBackgroundMode = MetaScreenBackgroundMode.Normal,
     val cinematicBackground: Boolean = false,
-    val heroTrailerPlayback: Boolean = false,
+    val heroTrailerPlayback: Boolean = true,
     val tabLayout: Boolean = false,
     val episodeCardStyle: MetaEpisodeCardStyle = MetaEpisodeCardStyle.Horizontal,
     val blurUnwatchedEpisodes: Boolean = false,
@@ -111,8 +111,8 @@ private data class StoredMetaScreenSettingsPayload(
     @SerialName("background_mode")
     val backgroundMode: String? = null,
     val cinematicBackground: Boolean = false,
-    @SerialName("hero_trailer_playback")
-    val heroTrailerPlayback: Boolean = false,
+    @SerialName("cinesnappa_hero_trailer_autoplay")
+    val heroTrailerPlayback: Boolean = true,
     @SerialName("tvStyleLayout")
     val tabLayout: Boolean = false,
     val episodeCardStyle: String = "horizontal",
@@ -191,7 +191,7 @@ object MetaScreenSettingsRepository {
     private var hasLoaded = false
     private var preferences: MutableMap<MetaScreenSectionKey, StoredMetaScreenSectionPreference> = mutableMapOf()
     private var backgroundMode: MetaScreenBackgroundMode = MetaScreenBackgroundMode.Normal
-    private var heroTrailerPlayback: Boolean = false
+    private var heroTrailerPlayback: Boolean = true
     private var tabLayout: Boolean = false
     private var episodeCardStyle: MetaEpisodeCardStyle = MetaEpisodeCardStyle.Horizontal
     private var blurUnwatchedEpisodes: Boolean = false
@@ -230,7 +230,7 @@ object MetaScreenSettingsRepository {
         hasLoaded = false
         preferences.clear()
         backgroundMode = MetaScreenBackgroundMode.Normal
-        heroTrailerPlayback = false
+        heroTrailerPlayback = true
         tabLayout = false
         episodeCardStyle = MetaEpisodeCardStyle.Horizontal
         blurUnwatchedEpisodes = false
@@ -294,7 +294,7 @@ object MetaScreenSettingsRepository {
         hasLoaded = false
         preferences.clear()
         backgroundMode = MetaScreenBackgroundMode.Normal
-        heroTrailerPlayback = false
+        heroTrailerPlayback = true
         tabLayout = false
         episodeCardStyle = MetaEpisodeCardStyle.Horizontal
         blurUnwatchedEpisodes = false
@@ -304,7 +304,7 @@ object MetaScreenSettingsRepository {
     internal fun applyFromSync(
         items: List<MetaScreenSectionItem>,
         cinematicBackground: Boolean,
-        heroTrailerPlayback: Boolean = false,
+        heroTrailerPlayback: Boolean = true,
         tabLayout: Boolean,
         episodeCardStyle: MetaEpisodeCardStyle = MetaEpisodeCardStyle.Horizontal,
         blurUnwatchedEpisodes: Boolean = false,
@@ -339,7 +339,7 @@ object MetaScreenSettingsRepository {
         ensureLoaded()
         preferences.clear()
         backgroundMode = MetaScreenBackgroundMode.Normal
-        heroTrailerPlayback = false
+        heroTrailerPlayback = true
         tabLayout = false
         episodeCardStyle = MetaEpisodeCardStyle.Horizontal
         blurUnwatchedEpisodes = false

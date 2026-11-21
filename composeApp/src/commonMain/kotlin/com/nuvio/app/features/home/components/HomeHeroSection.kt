@@ -51,6 +51,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.VolumeOff
+import androidx.compose.material.icons.rounded.VolumeUp
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nuvio.app.core.build.AppFeaturePolicy
+import com.nuvio.app.core.build.TrailerPlaybackMode
+import com.nuvio.app.features.details.HeroTrailerAudioState
+import com.nuvio.app.features.details.MetaDetailsRepository
+import com.nuvio.app.features.details.MetaScreenSettingsRepository
+import com.nuvio.app.features.details.components.HeroTrailerPlayerSurface
+import com.nuvio.app.features.details.selectHeroTrailer
+import com.nuvio.app.features.details.youtubePlaybackUrl
+import com.nuvio.app.features.trailer.TrailerPlaybackResolver
+import com.nuvio.app.features.trailer.TrailerPlaybackSource
+import kotlinx.coroutines.withTimeoutOrNull
 import com.nuvio.app.core.format.formatReleaseDateForDisplay
 import com.nuvio.app.core.ui.heroStretchHeight
 import com.nuvio.app.core.ui.heroStretchZoom
@@ -72,6 +90,9 @@ private const val HERO_SCROLL_MAX_SCALE = 1.3f
 private const val HERO_SWIPE_THRESHOLD_FRACTION = 0.16f
 private const val HERO_SWIPE_VELOCITY_THRESHOLD = 300f
 private const val HERO_AUTO_SCROLL_INTERVAL_MS = 8_000L
+private const val HOME_TRAILER_START_DELAY_MS = 1_200L
+private const val HOME_TRAILER_RESOLVE_TIMEOUT_MS = 10_000L
+private const val HOME_TRAILER_AFTER_END_DELAY_MS = 1_500L
 private const val MOBILE_HERO_VIEWPORT_RATIO = 0.82f
 private const val MOBILE_HERO_MIN_HEIGHT_DP = 360f
 private const val MOBILE_HERO_MAX_HEIGHT_DP = 760f
@@ -103,9 +124,53 @@ fun HomeHeroSection(
     val coroutineScope = rememberCoroutineScope()
     val autoScrollPage = pagerState.currentPage
 
-    LaunchedEffect(autoScrollPage, items.size) {
-        if (items.size <= 1) return@LaunchedEffect
-        delay(HERO_AUTO_SCROLL_INTERVAL_MS)
+    // CineSnappa: play a muted trailer behind the hero, then move on when it finishes.
+    val metaScreenSettings by remember {
+        MetaScreenSettingsRepository.ensureLoaded()
+        MetaScreenSettingsRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val homeTrailersEnabled = AppFeaturePolicy.heroTrailerPlaybackSupported &&
+        AppFeaturePolicy.trailerPlaybackMode == TrailerPlaybackMode.IN_APP &&
+        metaScreenSettings.heroTrailerPlayback
+    val trailerMuted by HeroTrailerAudioState.muted.collectAsStateWithLifecycle()
+    val settledItem = items[pagerState.settledPage.coerceIn(items.indices)]
+    var trailerSource by remember { mutableStateOf<TrailerPlaybackSource?>(null) }
+    var trailerItemId by remember { mutableStateOf<String?>(null) }
+    var trailerLoading by remember { mutableStateOf(false) }
+    var trailerReady by remember { mutableStateOf(false) }
+    var trailerEnded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(settledItem.id, homeTrailersEnabled) {
+        trailerSource = null
+        trailerReady = false
+        trailerEnded = false
+        trailerItemId = settledItem.id
+        trailerLoading = homeTrailersEnabled
+        if (!homeTrailersEnabled) return@LaunchedEffect
+        try {
+            delay(HOME_TRAILER_START_DELAY_MS)
+            val source = withTimeoutOrNull(HOME_TRAILER_RESOLVE_TIMEOUT_MS) {
+                val trailer = runCatching {
+                    MetaDetailsRepository.fetch(settledItem.type, settledItem.id)
+                        ?.trailers
+                        ?.let(::selectHeroTrailer)
+                }.getOrNull() ?: return@withTimeoutOrNull null
+                runCatching {
+                    TrailerPlaybackResolver.resolveFromYouTubeUrl(trailer.youtubePlaybackUrl())
+                }.getOrNull()
+            }
+            if (trailerItemId == settledItem.id) {
+                trailerSource = source?.takeIf { it.videoUrl.isNotBlank() }
+            }
+        } finally {
+            trailerLoading = false
+        }
+    }
+    val trailerHoldsPage = trailerLoading || (trailerSource != null && !trailerEnded)
+
+    LaunchedEffect(autoScrollPage, items.size, trailerHoldsPage) {
+        if (items.size <= 1 || trailerHoldsPage) return@LaunchedEffect
+        delay(if (trailerEnded) HOME_TRAILER_AFTER_END_DELAY_MS else HERO_AUTO_SCROLL_INTERVAL_MS)
         while (pagerState.isScrollInProgress) {
             delay(100L)
         }
@@ -209,6 +274,42 @@ fun HomeHeroSection(
                                 },
                             alignment = if (layout.isTablet) Alignment.TopCenter else Alignment.Center,
                             contentScale = ContentScale.Crop,
+                        )
+                    }
+
+                    val activeTrailer = trailerSource?.takeIf {
+                        homeTrailersEnabled &&
+                            !trailerEnded &&
+                            trailerItemId == currentItem.id &&
+                            !pagerState.isScrollInProgress
+                    }
+                    if (activeTrailer != null) {
+                        val trailerAlpha by animateFloatAsState(
+                            targetValue = if (trailerReady) 1f else 0f,
+                            label = "homeHeroTrailerAlpha",
+                        )
+                        HeroTrailerPlayerSurface(
+                            sourceUrl = activeTrailer.videoUrl,
+                            sourceAudioUrl = activeTrailer.audioUrl?.takeIf { it.isNotBlank() },
+                            playWhenReady = scrollOffsetPx < heroHeightPx * 0.6f,
+                            muted = trailerMuted,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer {
+                                    alpha = trailerAlpha
+                                    translationY = heroScrollTranslationY
+                                    scaleX = HERO_BACKGROUND_SCALE * heroScrollScale
+                                    scaleY = HERO_BACKGROUND_SCALE * heroScrollScale
+                                },
+                            onReady = { trailerReady = true },
+                            onEnded = {
+                                trailerReady = false
+                                trailerEnded = true
+                            },
+                            onError = {
+                                trailerReady = false
+                                trailerEnded = true
+                            },
                         )
                     }
                 }
@@ -320,6 +421,26 @@ fun HomeHeroSection(
                                 )
                             }
                         }
+                    }
+                }
+
+                if (trailerReady && trailerSource != null && !trailerEnded) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 16.dp, bottom = layout.contentVerticalPadding)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.45f))
+                            .clickable { HeroTrailerAudioState.toggleMuted() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = if (trailerMuted) Icons.Rounded.VolumeOff else Icons.Rounded.VolumeUp,
+                            contentDescription = if (trailerMuted) "Unmute trailer" else "Mute trailer",
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp),
+                        )
                     }
                 }
             }

@@ -17,15 +17,16 @@ data class ThemeColorPalette(
 
 object ThemeColors {
 
+    // CineSnappa red on near-black (TryBox-style).
     val Crimson = ThemeColorPalette(
-        secondary = Color(0xFFE53935),
-        secondaryVariant = Color(0xFFC62828),
-        nativeAccentHex = "#E53935",
-        focusRing = Color(0xFFFF5252),
-        focusBackground = Color(0xFF3D1A1A),
-        background = Color(0xFF0D0D0D),
-        backgroundElevated = Color(0xFF1A1A1A),
-        backgroundCard = Color(0xFF241A1A),
+        secondary = Color(0xFFE50914),
+        secondaryVariant = Color(0xFFB20710),
+        nativeAccentHex = "#E50914",
+        focusRing = Color(0xFFFF2A35),
+        focusBackground = Color(0xFF2A0A0C),
+        background = Color(0xFF050505),
+        backgroundElevated = Color(0xFF121212),
+        backgroundCard = Color(0xFF161212),
     )
 
     val Ocean = ThemeColorPalette(
