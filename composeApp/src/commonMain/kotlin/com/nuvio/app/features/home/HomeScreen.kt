@@ -104,6 +104,8 @@ import com.nuvio.app.features.home.components.rememberContinueWatchingLayout
 import kotlinx.coroutines.CancellationException
 import nuvio.composeapp.generated.resources.*
 import com.nuvio.app.features.cinesnappa.CineSnappaSection
+import com.nuvio.app.features.cinesnappa.CineSnappaTop10Row
+import com.nuvio.app.features.cinesnappa.pickTop10
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -882,6 +884,7 @@ fun HomeScreen(
             }
         }
 
+        val top10Items = remember(homeUiState.sections) { pickTop10(homeUiState.sections) }
         val heroStretchState = rememberHeroStretchState(homeListState)
         val heroStretchModifier = if (showHeroSlot) {
             Modifier.nestedScroll(heroStretchState.nestedScrollConnection)
@@ -1008,6 +1011,14 @@ fun HomeScreen(
                         onItemClick = onContinueWatchingClick,
                         onItemLongPress = onContinueWatchingLongPress,
                     )
+                    item(key = HOME_TOP10_SECTION_KEY) {
+                        CineSnappaTop10Row(
+                            items = top10Items,
+                            modifier = Modifier.padding(bottom = 16.dp),
+                            sectionPadding = homeSectionPadding,
+                            onItemClick = onPosterClick,
+                        )
+                    }
                     item(key = HOME_CINESNAPPA_SECTION_KEY) {
                         CineSnappaSection(
                             modifier = Modifier.padding(bottom = 16.dp),
@@ -1112,6 +1123,7 @@ private const val HOME_CATALOG_PREVIEW_LIMIT = 18
 private const val HOME_CONTINUE_WATCHING_SECTION_KEY = "home_continue_watching"
 private const val HOME_UPCOMING_SECTION_KEY = "home_upcoming"
 private const val HOME_CINESNAPPA_SECTION_KEY = "home_cinesnappa"
+private const val HOME_TOP10_SECTION_KEY = "home_top10"
 internal const val HomeContinueWatchingMaxRecentProgressItems = 300
 internal const val HomeNextUpInitialResolutionLimit = 32
 private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
