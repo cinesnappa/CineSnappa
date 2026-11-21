@@ -88,5 +88,11 @@ object CineSnappaRecommendedAddons {
             configureUrl = "https://watchly.elfhosted.com/",
             host = "watchly.elfhosted.com",
         ),
+        Addon(
+            name = "Streailer",
+            description = "Trailers in 16 languages, plus \"previously on\" season recaps",
+            configureUrl = "https://streailer.elfhosted.com/configure",
+            host = "streailer.elfhosted.com",
+        ),
     )
 }
