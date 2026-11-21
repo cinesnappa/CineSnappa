@@ -28,6 +28,7 @@ internal object DebridProviderApis {
         TorboxDebridProviderApi(),
         PremiumizeDebridProviderApi(),
         RealDebridProviderApi(),
+        AllDebridProviderApi(),
     )
 
     fun apiFor(providerId: String?): DebridProviderApi? {
@@ -255,6 +256,77 @@ private class RealDebridProviderApi(
             } finally {
                 if (!resolved) {
                     runCatching { RealDebridApiClient.deleteTorrent(apiKey, torrentId) }
+                }
+            }
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
+            DirectDebridResolveResult.Error
+        }
+    }
+}
+
+private class AllDebridProviderApi(
+    private val fileSelector: RealDebridFileSelector = RealDebridFileSelector(),
+) : DebridProviderApi {
+    override val provider: DebridProvider = DebridProviders.AllDebrid
+
+    override suspend fun validateApiKey(apiKey: String): Boolean =
+        AllDebridApiClient.validateApiKey(apiKey)
+
+    override suspend fun resolveClientStream(
+        stream: StreamItem,
+        apiKey: String,
+        season: Int?,
+        episode: Int?,
+    ): DirectDebridResolveResult {
+        val resolve = stream.clientResolve ?: return DirectDebridResolveResult.Error
+        val magnet = resolve.magnetUri?.takeIf { it.isNotBlank() }
+            ?: buildMagnetUri(resolve)
+            ?: return DirectDebridResolveResult.Stale
+
+        return try {
+            val upload = AllDebridApiClient.uploadMagnet(apiKey, magnet)
+            if (upload.status == 401 || upload.status == 403) return DirectDebridResolveResult.Error
+            val uploaded = upload.body?.takeIf { it.isSuccess }?.data?.magnets?.firstOrNull()
+                ?: return DirectDebridResolveResult.Stale
+            val magnetId = uploaded.id ?: return DirectDebridResolveResult.Stale
+            var resolved = false
+            try {
+                // Only instant (already cached) torrents can be played straight away.
+                if (uploaded.ready != true) return DirectDebridResolveResult.NotCached
+
+                val filesResponse = AllDebridApiClient.magnetFiles(apiKey, magnetId)
+                val nodes = filesResponse.body?.takeIf { it.isSuccess }?.data?.magnets?.firstOrNull()?.files
+                    ?: return DirectDebridResolveResult.Stale
+                val flat = nodes.flattenAllDebridFiles()
+                if (flat.isEmpty()) return DirectDebridResolveResult.Stale
+
+                // Reuse the Real-Debrid matcher (same file shape: id, path, size).
+                val candidates = flat.mapIndexed { index, file ->
+                    RealDebridTorrentFileDto(id = index + 1, path = "/${file.path}", bytes = file.size)
+                }
+                val chosen = fileSelector.selectFile(
+                    files = candidates,
+                    resolve = resolve,
+                    season = season,
+                    episode = episode,
+                ) ?: return DirectDebridResolveResult.Stale
+                val chosenFile = flat.getOrNull((chosen.id ?: 0) - 1) ?: return DirectDebridResolveResult.Stale
+
+                val unlock = AllDebridApiClient.unlockLink(apiKey, chosenFile.link)
+                val unlocked = unlock.body?.takeIf { it.isSuccess }?.data
+                    ?: return DirectDebridResolveResult.Stale
+                val url = unlocked.link?.takeIf { it.isNotBlank() }
+                    ?: return DirectDebridResolveResult.Stale
+                resolved = true
+                DirectDebridResolveResult.Success(
+                    url = url,
+                    filename = unlocked.filename?.takeIf { it.isNotBlank() } ?: chosen.displayName(),
+                    videoSize = unlocked.filesize ?: chosenFile.size,
+                )
+            } finally {
+                if (!resolved) {
+                    runCatching { AllDebridApiClient.deleteMagnet(apiKey, magnetId) }
                 }
             }
         } catch (error: Exception) {

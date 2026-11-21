@@ -30,6 +30,7 @@ object DebridProviders {
     const val TORBOX_ID = "torbox"
     const val PREMIUMIZE_ID = "premiumize"
     const val REAL_DEBRID_ID = "realdebrid"
+    const val ALL_DEBRID_ID = "alldebrid"
 
     val Torbox = DebridProvider(
         id = TORBOX_ID,
@@ -61,11 +62,21 @@ object DebridProviders {
         id = REAL_DEBRID_ID,
         displayName = "Real-Debrid",
         shortName = "RD",
-        visibleInUi = false,
+        // CineSnappa: shown in Settings > Debrid (hidden in upstream Nuvio).
+        visibleInUi = true,
         capabilities = setOf(DebridProviderCapability.ClientResolve),
     )
 
-    private val registered = listOf(Torbox, Premiumize, RealDebrid)
+    // CineSnappa: AllDebrid, signed in with the user's own API key.
+    val AllDebrid = DebridProvider(
+        id = ALL_DEBRID_ID,
+        displayName = "AllDebrid",
+        shortName = "AD",
+        authMethod = DebridProviderAuthMethod.ApiKey,
+        capabilities = setOf(DebridProviderCapability.ClientResolve),
+    )
+
+    private val registered = listOf(Torbox, Premiumize, RealDebrid, AllDebrid)
 
     fun all(): List<DebridProvider> = registered
 
