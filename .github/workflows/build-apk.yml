@@ -69,13 +69,24 @@ jobs:
             echo "NUVIO_RELEASE_KEY_ALIAS=${KEY_ALIAS}"
             echo "NUVIO_RELEASE_KEY_PASSWORD=${KEYSTORE_PASSWORD}"
             if [[ -n "${TRAKT_CLIENT_ID}" ]]; then
-              echo "TRAKT_CLIENT_ID=${TRAKT_CLIENT_ID}"
+              echo "TRAKT_CLIENT_ID=$(printf '%s' "${TRAKT_CLIENT_ID}" | tr -d '[:space:]')"
               echo "TRAKT_CLIENT_SECRET=${TRAKT_CLIENT_SECRET}"
               echo "TRAKT_REDIRECT_URI=cinesnappa://auth/trakt"
             fi
-            if [[ -n "${SUPABASE_URL}" && -n "${SUPABASE_ANON_KEY}" ]]; then
-              echo "NUVIO_SUPABASE_URL=${SUPABASE_URL}"
-              echo "NUVIO_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
+            # Accept whatever was pasted (project URL, API URL, dashboard link) and
+            # reduce it to https://<project-ref>.supabase.co; anything else turns accounts off.
+            clean_url=""
+            raw_url="$(printf '%s' "${SUPABASE_URL}" | tr -d '[:space:]')"
+            if [[ "${raw_url}" =~ ([a-z0-9]{15,})\.supabase\.co ]]; then
+              clean_url="https://${BASH_REMATCH[1]}.supabase.co"
+            elif [[ "${raw_url}" =~ project/([a-z0-9]{15,}) ]]; then
+              clean_url="https://${BASH_REMATCH[1]}.supabase.co"
+            fi
+            clean_key="$(printf '%s' "${SUPABASE_ANON_KEY}" | tr -d '[:space:]')"
+            if [[ -n "${clean_url}" && -n "${clean_key}" ]]; then
+              echo "Using Supabase project ${clean_url}" >&2
+              echo "NUVIO_SUPABASE_URL=${clean_url}"
+              echo "NUVIO_SUPABASE_ANON_KEY=${clean_key}"
             fi
           } > local.properties
 
